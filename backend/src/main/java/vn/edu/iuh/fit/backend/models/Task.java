@@ -27,9 +27,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Task {
-    private Long id;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String title;
     @Column(columnDefinition = "text")
     private String description;

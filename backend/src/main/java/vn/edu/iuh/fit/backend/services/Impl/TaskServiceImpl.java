@@ -71,7 +71,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @Cacheable // đánh dấu phương thức này để kết quả sẽ được lưu vào cache
+    @Cacheable(value = "tasks") // đánh dấu phương thức này để kết quả sẽ được lưu vào cache
     public List<TaskDto> getAllTasks() {
         return taskRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
