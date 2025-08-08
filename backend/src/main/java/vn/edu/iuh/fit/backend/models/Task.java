@@ -33,7 +33,7 @@ public class Task {
     private String title;
     @Column(columnDefinition = "text")
     private String description;
-    private String string;
+    private String status;
     private LocalDate deadline;
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ChecklistItem> checklist = new ArrayList<>();
