@@ -90,24 +90,28 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @CacheEvict(value = "tasks", allEntries = true) // đánh dấu phương thức này để xóa cache khi có thay đổi
+    @CacheEvict(value = "tasks", allEntries = true)
     public TaskDto updateTask(Long id, TaskDto taskDto) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+
+        // Cập nhật thông tin cơ bản
         task.setTitle(taskDto.getTitle());
         task.setDescription(taskDto.getDescription());
         task.setDeadline(taskDto.getDeadline());
         task.setStatus(taskDto.getStatus() == null ? "TODO" : taskDto.getStatus());
 
-        // Thay thế checklist: simple approach - clear and add
+        // Xóa checklist cũ
         task.getChecklist().clear();
+
+        // Thêm checklist mới
         if (taskDto.getChecklist() != null) {
             taskDto.getChecklist().forEach(c -> {
                 ChecklistItem item = ChecklistItem.builder()
                         .content(c.getContent())
                         .checked(c.isChecked())
                         .build();
-                task.addChecklistItem(item);
+                task.addChecklistItem(item); // dùng hàm tiện ích
             });
         }
 
@@ -120,16 +124,6 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
 
-    }
-
-    @Override
-    @CacheEvict(value = "tasks", allEntries = true) // đánh dấu phương thức này để xóa cache khi có thay đổi
-    public TaskDto moveTaskStatus(Long id, String status) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
-        task.setStatus(status);
-        Task updatedTask = taskRepository.save(task);
-        return toDto(updatedTask);
     }
 }
 

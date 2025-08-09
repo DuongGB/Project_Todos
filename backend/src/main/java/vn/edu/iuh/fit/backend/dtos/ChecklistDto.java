@@ -8,6 +8,8 @@ package vn.edu.iuh.fit.backend.dtos;
 
 import lombok.*;
 
+import java.io.Serializable;
+
 /*
  * @description:
  * @author: Nguyen Tan Thai Duong
@@ -19,7 +21,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChecklistDto {
+public class ChecklistDto implements Serializable {
     private Long id;
     private String content;
     private boolean checked;

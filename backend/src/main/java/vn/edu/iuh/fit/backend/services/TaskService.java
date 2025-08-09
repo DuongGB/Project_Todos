@@ -26,7 +26,5 @@ public interface TaskService {
     TaskDto updateTask(Long id, TaskDto taskDto);
 
     void deleteTask(Long id);
-
-    TaskDto moveTaskStatus(Long id, String status);
 }
 
