@@ -67,11 +67,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId> <!-- hỗ trợ connection pooling -->
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 
     <build>
