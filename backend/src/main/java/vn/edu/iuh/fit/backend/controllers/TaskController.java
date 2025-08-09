@@ -8,10 +8,8 @@ package vn.edu.iuh.fit.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.fit.backend.dtos.TaskDto;
 import vn.edu.iuh.fit.backend.services.TaskService;
 
@@ -34,5 +32,28 @@ public class TaskController {
     public ResponseEntity<List<TaskDto>> getAll() {
         return ResponseEntity.ok(taskService.getAllTasks());
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TaskDto> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.getTaskById(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<TaskDto> create(@Validated @RequestBody TaskDto dto) {
+        TaskDto saved = taskService.createTask(dto);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<TaskDto> update(@PathVariable Long id, @Validated @RequestBody TaskDto dto) {
+        return ResponseEntity.ok(taskService.updateTask(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }
 
