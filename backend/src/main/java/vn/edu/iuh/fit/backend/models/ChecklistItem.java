@@ -9,6 +9,8 @@ package vn.edu.iuh.fit.backend.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 /*
  * @description:
  * @author: Nguyen Tan Thai Duong
@@ -22,7 +24,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChecklistItem {
+public class ChecklistItem implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

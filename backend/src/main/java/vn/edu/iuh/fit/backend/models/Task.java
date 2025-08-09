@@ -9,6 +9,7 @@ package vn.edu.iuh.fit.backend.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,19 +27,22 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Task {
-    private Long id;
+public class Task implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String title;
     @Column(columnDefinition = "text")
     private String description;
     private String status;
     private LocalDate deadline;
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChecklistItem> checklist = new ArrayList<>();
 
     public void addChecklistItem(ChecklistItem item) {
+        if (this.checklist == null) {
+            this.checklist = new ArrayList<>();
+        }
         item.setTask(this);
         this.checklist.add(item);
     }

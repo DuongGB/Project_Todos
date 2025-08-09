@@ -8,6 +8,7 @@ package vn.edu.iuh.fit.backend.dtos;
 
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,7 +23,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TaskDto {
+public class TaskDto implements Serializable {
     private Long id;
     private String title;
     private String description;
