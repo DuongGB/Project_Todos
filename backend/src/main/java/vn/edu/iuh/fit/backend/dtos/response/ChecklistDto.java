@@ -4,7 +4,7 @@
  * Copyright (c) 2025 IUH. All rights reserved.
  */
 
-package vn.edu.iuh.fit.backend.dtos;
+package vn.edu.iuh.fit.backend.dtos.response;
 
 import lombok.*;
 

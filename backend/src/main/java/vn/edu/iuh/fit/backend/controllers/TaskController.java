@@ -10,7 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import vn.edu.iuh.fit.backend.dtos.TaskDto;
+import vn.edu.iuh.fit.backend.dtos.response.BaseResponse;
+import vn.edu.iuh.fit.backend.dtos.response.TaskDto;
 import vn.edu.iuh.fit.backend.services.TaskService;
 
 import java.util.List;
@@ -29,30 +30,43 @@ public class TaskController {
     private final TaskService taskService;
 
     @GetMapping
-    public ResponseEntity<List<TaskDto>> getAll() {
-        return ResponseEntity.ok(taskService.getAllTasks());
+    public ResponseEntity<BaseResponse<List<TaskDto>>> getAll() {
+        List<TaskDto> tasks = taskService.getAllTasks();
+        return ResponseEntity.ok(
+                new BaseResponse<>("success", "Tasks retrieved successfully", tasks)
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TaskDto> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(taskService.getTaskById(id));
+    public ResponseEntity<BaseResponse<TaskDto>> getById(@PathVariable Long id) {
+        TaskDto task = taskService.getTaskById(id);
+        return ResponseEntity.ok(
+                new BaseResponse<>("success", "Task retrieved successfully", task)
+        );
     }
 
     @PostMapping
-    public ResponseEntity<TaskDto> create(@Validated @RequestBody TaskDto dto) {
+    public ResponseEntity<BaseResponse<TaskDto>> create(@Validated @RequestBody TaskDto dto) {
         TaskDto saved = taskService.createTask(dto);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(
+                new BaseResponse<>("success", "Task created successfully", saved)
+        );
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<TaskDto> update(@PathVariable Long id, @Validated @RequestBody TaskDto dto) {
-        return ResponseEntity.ok(taskService.updateTask(id, dto));
+    public ResponseEntity<BaseResponse<TaskDto>> update(@PathVariable Long id, @Validated @RequestBody TaskDto dto) {
+        TaskDto updated = taskService.updateTask(id, dto);
+        return ResponseEntity.ok(
+                new BaseResponse<>("success", "Task updated successfully", updated)
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<BaseResponse<Void>> delete(@PathVariable Long id) {
         taskService.deleteTask(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(
+                new BaseResponse<>("success", "Task deleted successfully", null)
+        );
     }
 
 }

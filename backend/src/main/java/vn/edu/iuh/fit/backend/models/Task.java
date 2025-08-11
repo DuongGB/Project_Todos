@@ -8,6 +8,7 @@ package vn.edu.iuh.fit.backend.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import vn.edu.iuh.fit.backend.enums.TaskStatus;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -34,10 +35,15 @@ public class Task implements Serializable {
     private String title;
     @Column(columnDefinition = "text")
     private String description;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private TaskStatus status;
     private LocalDate deadline;
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChecklistItem> checklist = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public void addChecklistItem(ChecklistItem item) {
         if (this.checklist == null) {
@@ -46,6 +52,5 @@ public class Task implements Serializable {
         item.setTask(this);
         this.checklist.add(item);
     }
-
 }
 

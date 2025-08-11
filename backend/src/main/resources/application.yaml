@@ -23,3 +23,6 @@ server:
 logging:
   level:
     org.springframework: INFO
+jwt:
+  secret: "knBKUG90v9AEQha4zTjch3BEpsIbdXN8ZXJI5KJ3yLRPhziP/5CoMucZJOiNswNC1nviIAdo59D/CYdAF0aIdA=="
+  expiration: 86400000 # 1 ngày
