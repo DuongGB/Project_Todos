@@ -6,7 +6,7 @@
 
 package vn.edu.iuh.fit.backend.services;
 
-import vn.edu.iuh.fit.backend.dtos.TaskDto;
+import vn.edu.iuh.fit.backend.dtos.response.TaskDto;
 
 import java.util.List;
 

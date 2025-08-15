@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import vn.edu.iuh.fit.backend.dtos.ChecklistDto;
-import vn.edu.iuh.fit.backend.dtos.TaskDto;
+import vn.edu.iuh.fit.backend.dtos.response.ChecklistDto;
+import vn.edu.iuh.fit.backend.dtos.response.TaskDto;
 import vn.edu.iuh.fit.backend.models.ChecklistItem;
 import vn.edu.iuh.fit.backend.models.Task;
 import vn.edu.iuh.fit.backend.repositories.TaskRepository;
@@ -55,7 +55,7 @@ public class TaskServiceImpl implements TaskService {
         Task t = Task.builder()
                 .title(taskDto.getTitle())
                 .description(taskDto.getDescription())
-                .status(taskDto.getStatus() == null ? "TODO" : taskDto.getStatus())
+                .status(taskDto.getStatus())
                 .deadline(taskDto.getDeadline())
                 .build();
         if (taskDto.getChecklist() != null) {
@@ -99,7 +99,7 @@ public class TaskServiceImpl implements TaskService {
         task.setTitle(taskDto.getTitle());
         task.setDescription(taskDto.getDescription());
         task.setDeadline(taskDto.getDeadline());
-        task.setStatus(taskDto.getStatus() == null ? "TODO" : taskDto.getStatus());
+        task.setStatus(taskDto.getStatus());
 
         // Xóa checklist cũ
         task.getChecklist().clear();

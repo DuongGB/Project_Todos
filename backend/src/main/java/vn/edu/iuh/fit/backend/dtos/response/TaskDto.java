@@ -4,9 +4,10 @@
  * Copyright (c) 2025 IUH. All rights reserved.
  */
 
-package vn.edu.iuh.fit.backend.dtos;
+package vn.edu.iuh.fit.backend.dtos.response;
 
 import lombok.*;
+import vn.edu.iuh.fit.backend.enums.TaskStatus;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -27,10 +28,8 @@ public class TaskDto implements Serializable {
     private Long id;
     private String title;
     private String description;
-    private String status;
+    private TaskStatus status;
     private LocalDate deadline;
     private List<ChecklistDto> checklist;
-
-
 }
 
