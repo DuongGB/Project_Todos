@@ -12,12 +12,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import vn.edu.iuh.fit.backend.dtos.request.LoginRequest;
 import vn.edu.iuh.fit.backend.dtos.response.BaseResponse;
+import vn.edu.iuh.fit.backend.models.User;
+import vn.edu.iuh.fit.backend.repositories.UserRepository;
 import vn.edu.iuh.fit.backend.services.JwtService;
 
 /*
@@ -32,6 +35,27 @@ import vn.edu.iuh.fit.backend.services.JwtService;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+
+    @PostMapping("/register")
+    public ResponseEntity<BaseResponse<?>> register(@RequestBody LoginRequest request) {
+        // Kiểm tra username đã tồn tại chưa
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            return ResponseEntity.status(400).body(
+                    new BaseResponse<>("error", "Username already exists", null)
+            );
+        }
+        // Nếu chưa tồn tại → tạo mới
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncoder.encode(request.getPassword())); // Mã hóa mật khẩu
+        userRepository.save(user);
+        return ResponseEntity.ok(
+                new BaseResponse<>("success", "User registered successfully", null)
+        );
+    }
+
 
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<?>> login(@RequestBody LoginRequest request) {
