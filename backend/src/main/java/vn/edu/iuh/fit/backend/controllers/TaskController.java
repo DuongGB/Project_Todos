@@ -8,6 +8,7 @@ package vn.edu.iuh.fit.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.fit.backend.dtos.response.BaseResponse;
@@ -30,38 +31,63 @@ public class TaskController {
     private final TaskService taskService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BaseResponse<List<TaskDto>>> getAll() {
         List<TaskDto> tasks = taskService.getAllTasks();
+        if (tasks.isEmpty()) {
+            return ResponseEntity.ok(
+                    new BaseResponse<>("success", "No tasks found", tasks)
+            );
+        }
         return ResponseEntity.ok(
                 new BaseResponse<>("success", "Tasks retrieved successfully", tasks)
         );
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BaseResponse<TaskDto>> getById(@PathVariable Long id) {
         TaskDto task = taskService.getTaskById(id);
+        if (task == null) {
+            return ResponseEntity.status(404).body(
+                    new BaseResponse<>("error", "Task not found", null)
+            );
+        }
         return ResponseEntity.ok(
                 new BaseResponse<>("success", "Task retrieved successfully", task)
         );
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BaseResponse<TaskDto>> create(@Validated @RequestBody TaskDto dto) {
         TaskDto saved = taskService.createTask(dto);
-        return ResponseEntity.ok(
+        if (saved == null) {
+            return ResponseEntity.status(400).body(
+                    new BaseResponse<>("error", "Failed to create task", null)
+            );
+        }
+        return ResponseEntity.status(201).body(
                 new BaseResponse<>("success", "Task created successfully", saved)
         );
     }
 
     @PostMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BaseResponse<TaskDto>> update(@PathVariable Long id, @Validated @RequestBody TaskDto dto) {
         TaskDto updated = taskService.updateTask(id, dto);
+        if (updated == null) {
+            return ResponseEntity.status(404).body(
+                    new BaseResponse<>("error", "Task not found or update failed", null)
+            );
+        }
         return ResponseEntity.ok(
                 new BaseResponse<>("success", "Task updated successfully", updated)
         );
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BaseResponse<Void>> delete(@PathVariable Long id) {
         taskService.deleteTask(id);
         return ResponseEntity.ok(

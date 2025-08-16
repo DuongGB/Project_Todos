@@ -1,10 +1,9 @@
-/*
+package vn.edu.iuh.fit.backend.security;/*
  * @ {#} JwtService.java   1.0     8/11/2025
  *
  * Copyright (c) 2025 IUH. All rights reserved.
  */
 
-package vn.edu.iuh.fit.backend.services;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,6 +43,15 @@ public class JwtService {
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 ngày
                 .signWith(getSignKey(), SignatureAlgorithm.HS256) // secretKey đã tạo từ Keys.hmacShaKeyFor()
+                .compact();
+    }
+
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 604800000)) // 7 ngày
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 

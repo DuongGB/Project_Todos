@@ -12,16 +12,22 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import vn.edu.iuh.fit.backend.dtos.request.LoginRequest;
+import vn.edu.iuh.fit.backend.dtos.request.RefreshTokenRequest;
 import vn.edu.iuh.fit.backend.dtos.response.BaseResponse;
 import vn.edu.iuh.fit.backend.models.User;
 import vn.edu.iuh.fit.backend.repositories.UserRepository;
-import vn.edu.iuh.fit.backend.services.JwtService;
+import vn.edu.iuh.fit.backend.security.JwtService;
+import vn.edu.iuh.fit.backend.services.UserDetailsService;
+
+
+import java.util.Map;
 
 /*
  * @description:
@@ -37,6 +43,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final UserDetailsService userDetailsService;
 
     @PostMapping("/register")
     public ResponseEntity<BaseResponse<?>> register(@RequestBody LoginRequest request) {
@@ -64,15 +71,45 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
 
-            String token = jwtService.generateToken(authentication.getName());
+            String accessToken = jwtService.generateToken(authentication.getName());
+            String refreshToken = jwtService.generateRefreshToken(authentication.getName());
             return ResponseEntity.ok(
-                    new BaseResponse<>("success", "Login successful", token)
+                    new BaseResponse<>("success", "Login successful", Map.of("accessToken", accessToken, "refreshToken", refreshToken))
             );
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body(
                     new BaseResponse<>("error", "Invalid username or password", null)
             );
         }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<BaseResponse<?>> refreshToken(@RequestBody RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
+        if (refreshToken == null) {
+            return ResponseEntity.status(400).body(
+                    new BaseResponse<>("error", "Refresh token is missing", null)
+            );
+        }
+
+        try {
+            String username = jwtService.extractUsername(refreshToken);
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            if (username != null && jwtService.validateToken(refreshToken, userDetails)) {
+                String newAccessToken = jwtService.generateToken(username);
+                return ResponseEntity.ok(
+                        new BaseResponse<>("success", "Token refreshed successfully", Map.of("accessToken", newAccessToken))
+                );
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(
+                    new BaseResponse<>("error", "Invalid refresh token", null)
+            );
+        }
+
+        return ResponseEntity.status(401).body(
+                new BaseResponse<>("error", "Invalid refresh token", null)
+        );
     }
 }
 

@@ -30,9 +30,17 @@ public class RedisConfig {
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(factory); // sử dụng LettuceConnectionFactory để kết nối Redis
-        template.setKeySerializer(new StringRedisSerializer()); // duy trì định dạng chuỗi cho khóa
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer()); // sử dụng GenericJackson2JsonRedisSerializer để tuần tự hóa giá trị thành JSON
+        template.setConnectionFactory(factory);
+
+        // Key = String
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+
+        // Value = JSON
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
+        template.setValueSerializer(serializer);
+        template.setHashValueSerializer(serializer);
+
         template.afterPropertiesSet();
         return template;
     }

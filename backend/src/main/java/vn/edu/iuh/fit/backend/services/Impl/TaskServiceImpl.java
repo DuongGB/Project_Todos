@@ -10,12 +10,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.backend.dtos.response.ChecklistDto;
 import vn.edu.iuh.fit.backend.dtos.response.TaskDto;
 import vn.edu.iuh.fit.backend.models.ChecklistItem;
 import vn.edu.iuh.fit.backend.models.Task;
+import vn.edu.iuh.fit.backend.models.User;
 import vn.edu.iuh.fit.backend.repositories.TaskRepository;
+import vn.edu.iuh.fit.backend.repositories.UserRepository;
 import vn.edu.iuh.fit.backend.services.TaskService;
 
 import java.util.List;
@@ -32,6 +36,7 @@ import java.util.stream.Collectors;
 @Transactional // dùng để đảm bảo tính toàn vẹn của giao dịch
 public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
 
     private TaskDto toDto(Task task) {
         List<ChecklistDto> checklistDtos = task.getChecklist().stream()
@@ -84,7 +89,15 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @CacheEvict(value = "tasks", allEntries = true) // đánh dấu phương thức này để xóa cache khi có thay đổi
     public TaskDto createTask(TaskDto taskDto) {
+        // Lấy thông tin người dùng hiện tại
+        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Chuyển đổi DTO sang Entity và gắn User
         Task entity = toEntity(taskDto);
+        entity.setUser(user);
+
         Task savedTask = taskRepository.save(entity);
         return toDto(savedTask);
     }
@@ -94,27 +107,25 @@ public class TaskServiceImpl implements TaskService {
     public TaskDto updateTask(Long id, TaskDto taskDto) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
-
-        // Cập nhật thông tin cơ bản
+        // Cập nhật thông tin của task
         task.setTitle(taskDto.getTitle());
         task.setDescription(taskDto.getDescription());
-        task.setDeadline(taskDto.getDeadline());
         task.setStatus(taskDto.getStatus());
-
-        // Xóa checklist cũ
-        task.getChecklist().clear();
-
-        // Thêm checklist mới
+        task.setDeadline(taskDto.getDeadline());
+        // Cập nhật checklist
         if (taskDto.getChecklist() != null) {
+            task.getChecklist().clear(); // Xóa checklist cũ
             taskDto.getChecklist().forEach(c -> {
                 ChecklistItem item = ChecklistItem.builder()
                         .content(c.getContent())
                         .checked(c.isChecked())
                         .build();
-                task.addChecklistItem(item); // dùng hàm tiện ích
+                task.addChecklistItem(item);
             });
+        } else {
+            task.getChecklist().clear(); // Xóa checklist nếu không có checklist mới
+            task.setChecklist(null);
         }
-
         Task updatedTask = taskRepository.save(task);
         return toDto(updatedTask);
     }
@@ -122,8 +133,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @CacheEvict(value = "tasks", allEntries = true) // đánh dấu phương thức này để xóa cache khi có thay đổi
     public void deleteTask(Long id) {
-        taskRepository.deleteById(id);
-
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+        taskRepository.delete(task);
     }
 }
 
