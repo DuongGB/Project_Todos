@@ -8,6 +8,7 @@ package vn.edu.iuh.fit.backend.configs;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 /*
@@ -35,6 +36,7 @@ import vn.edu.iuh.fit.backend.security.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true) // Enables method-level security annotations like @PreAuthorize
 @RequiredArgsConstructor
 public class SecurityConfig {
 
