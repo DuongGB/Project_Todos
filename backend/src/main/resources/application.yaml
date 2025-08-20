@@ -1,8 +1,10 @@
 spring:
+  application:
+    name: backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/tododb
-    username: postgres
-    password: admin
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -17,12 +19,12 @@ spring:
       timeout: 60000
 
 server:
-  port: 8080
+  port: ${SERVER_PORT}
 
 # Optional: logging
 logging:
   level:
     org.springframework: INFO
 jwt:
-  secret: "knBKUG90v9AEQha4zTjch3BEpsIbdXN8ZXJI5KJ3yLRPhziP/5CoMucZJOiNswNC1nviIAdo59D/CYdAF0aIdA=="
+  secret: ${JWT_SIGNED_KEY}
   expiration: 86400000 # 1 ngày
