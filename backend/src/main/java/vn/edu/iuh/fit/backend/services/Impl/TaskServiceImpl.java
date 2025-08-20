@@ -41,13 +41,11 @@ public class TaskServiceImpl implements TaskService {
     private TaskDto toDto(Task task) {
         List<ChecklistDto> checklistDtos = task.getChecklist().stream()
                 .map(c -> ChecklistDto.builder()
-                        .id(c.getId())
                         .content(c.getContent())
                         .checked(c.isChecked())
                         .build())
                 .collect(Collectors.toList());
         return TaskDto.builder()
-                .id(task.getId())
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .status(task.getStatus())

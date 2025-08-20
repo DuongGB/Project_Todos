@@ -22,7 +22,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Builder
 public class ChecklistDto implements Serializable {
-    private Long id;
     private String content;
     private boolean checked;
 }

@@ -25,7 +25,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class TaskDto implements Serializable {
-    private Long id;
     private String title;
     private String description;
     private TaskStatus status;
