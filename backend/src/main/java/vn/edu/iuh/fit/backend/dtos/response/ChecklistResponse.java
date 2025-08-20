@@ -8,6 +8,8 @@ package vn.edu.iuh.fit.backend.dtos.response;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /*
  * @description:
  * @author: Nguyen Tan Thai Duong
@@ -15,7 +17,8 @@ import lombok.Data;
  * @version:    1.0
  */
 @Data
-public class ChecklistResponse {
+public class ChecklistResponse implements Serializable {
+    private static final long serialVersionUID = 1L;
     private Long id;
     private String content;
     private boolean checked;
