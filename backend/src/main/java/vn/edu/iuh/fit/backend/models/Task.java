@@ -32,12 +32,17 @@ public class Task implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String title;
+
     @Column(columnDefinition = "text")
     private String description;
+
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
+
     private LocalDate deadline;
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChecklistItem> checklist = new ArrayList<>();
 

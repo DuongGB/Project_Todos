@@ -6,7 +6,8 @@
 
 package vn.edu.iuh.fit.backend.services;
 
-import vn.edu.iuh.fit.backend.dtos.response.TaskDto;
+import vn.edu.iuh.fit.backend.dtos.request.TaskRequest;
+import vn.edu.iuh.fit.backend.dtos.response.TaskResponse;
 
 import java.util.List;
 
@@ -17,13 +18,13 @@ import java.util.List;
  * @version:    1.0
  */
 public interface TaskService {
-    List<TaskDto> getAllTasks();
+    List<TaskResponse> getAllTasks();
 
-    TaskDto getTaskById(Long id);
+    TaskResponse getTaskById(Long id);
 
-    TaskDto createTask(TaskDto taskDto);
+    TaskResponse createTask(TaskRequest taskRequest, Long userId);
 
-    TaskDto updateTask(Long id, TaskDto taskDto);
+    TaskResponse updateTask(Long id, TaskRequest taskRequest);
 
     void deleteTask(Long id);
 }

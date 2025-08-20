@@ -10,11 +10,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import vn.edu.iuh.fit.backend.dtos.response.ChecklistDto;
-import vn.edu.iuh.fit.backend.dtos.response.TaskDto;
+import vn.edu.iuh.fit.backend.dtos.request.TaskRequest;
+import vn.edu.iuh.fit.backend.dtos.response.ChecklistResponse;
+import vn.edu.iuh.fit.backend.dtos.response.TaskResponse;
 import vn.edu.iuh.fit.backend.models.ChecklistItem;
 import vn.edu.iuh.fit.backend.models.Task;
 import vn.edu.iuh.fit.backend.models.User;
@@ -38,94 +37,99 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
 
-    private TaskDto toDto(Task task) {
-        List<ChecklistDto> checklistDtos = task.getChecklist().stream()
-                .map(c -> ChecklistDto.builder()
-                        .content(c.getContent())
-                        .checked(c.isChecked())
-                        .build())
-                .collect(Collectors.toList());
-        return TaskDto.builder()
-                .title(task.getTitle())
-                .description(task.getDescription())
-                .status(task.getStatus())
-                .deadline(task.getDeadline())
-                .checklist(checklistDtos)
-                .build();
+    private TaskResponse toTaskResponse(Task task) {
+        TaskResponse response = new TaskResponse();
+        response.setId(task.getId());
+        response.setTitle(task.getTitle());
+        response.setDescription(task.getDescription());
+        response.setDeadline(task.getDeadline());
+        response.setStatus(task.getStatus() != null ? task.getStatus().name() : null);
+        if (task.getChecklist() != null) {
+            List<ChecklistResponse> checklistResponses = task.getChecklist().stream()
+                    .map(item -> {
+                        ChecklistResponse itemResponse = new ChecklistResponse();
+                        itemResponse.setId(item.getId());
+                        itemResponse.setContent(item.getContent());
+                        itemResponse.setChecked(item.isChecked());
+                        return itemResponse;
+                    })
+                    .toList();
+            response.setChecklist(checklistResponses);
+        }
+        return response;
     }
 
-    private Task toEntity(TaskDto taskDto) {
-        Task t = Task.builder()
-                .title(taskDto.getTitle())
-                .description(taskDto.getDescription())
-                .status(taskDto.getStatus())
-                .deadline(taskDto.getDeadline())
-                .build();
-        if (taskDto.getChecklist() != null) {
-            taskDto.getChecklist().forEach(c -> {
-                ChecklistItem item = ChecklistItem.builder()
-                        .content(c.getContent())
-                        .checked(c.isChecked())
-                        .build();
-                t.addChecklistItem(item);
-            });
-        }
-        return t;
-    }
 
     @Override
     @Cacheable(value = "tasks") // đánh dấu phương thức này để kết quả sẽ được lưu vào cache
-    public List<TaskDto> getAllTasks() {
-        return taskRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    public List<TaskResponse> getAllTasks() {
+        return taskRepository.findAll().stream().
+                map(this::toTaskResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public TaskDto getTaskById(Long id) {
-        return taskRepository.findById(id).map(this::toDto).orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+    public TaskResponse getTaskById(Long id) {
+        return taskRepository.findById(id).map(this::toTaskResponse)
+                .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
     }
 
+    @CacheEvict(value = "tasks", allEntries = true)
     @Override
-    @CacheEvict(value = "tasks", allEntries = true) // đánh dấu phương thức này để xóa cache khi có thay đổi
-    public TaskDto createTask(TaskDto taskDto) {
-        // Lấy thông tin người dùng hiện tại
-        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Chuyển đổi DTO sang Entity và gắn User
-        Task entity = toEntity(taskDto);
-        entity.setUser(user);
-
-        Task savedTask = taskRepository.save(entity);
-        return toDto(savedTask);
+    public TaskResponse createTask(TaskRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        // Tạo mới task
+        Task task = new Task();
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        task.setDeadline(request.getDeadline());
+        task.setStatus(request.getStatus() != null ? request.getStatus() : null);
+        task.setUser(user);
+        // Tạo checklist items nếu có
+        List<ChecklistItem> items = request.getChecklist().stream().map(itemReq -> {
+            ChecklistItem item = new ChecklistItem();
+            item.setContent(itemReq.getContent());
+            item.setChecked(itemReq.isChecked());
+            item.setTask(task);
+            return item;
+        }).collect(Collectors.toList());
+        task.setChecklist(items);
+        taskRepository.save(task);
+        // convert to TaskResponse
+        return toTaskResponse(task);
     }
 
     @Override
     @CacheEvict(value = "tasks", allEntries = true)
-    public TaskDto updateTask(Long id, TaskDto taskDto) {
+    public TaskResponse updateTask(Long id, TaskRequest taskRequest) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
-        // Cập nhật thông tin của task
-        task.setTitle(taskDto.getTitle());
-        task.setDescription(taskDto.getDescription());
-        task.setStatus(taskDto.getStatus());
-        task.setDeadline(taskDto.getDeadline());
-        // Cập nhật checklist
-        if (taskDto.getChecklist() != null) {
-            task.getChecklist().clear(); // Xóa checklist cũ
-            taskDto.getChecklist().forEach(c -> {
-                ChecklistItem item = ChecklistItem.builder()
-                        .content(c.getContent())
-                        .checked(c.isChecked())
-                        .build();
-                task.addChecklistItem(item);
-            });
+        // Cập nhật thông tin task
+        task.setTitle(taskRequest.getTitle());
+        task.setDescription(taskRequest.getDescription());
+        task.setDeadline(taskRequest.getDeadline());
+        // Nếu có status thì cập nhật
+        if (taskRequest.getStatus() != null) {
+            task.setStatus(taskRequest.getStatus());
+        }
+        // Cập nhật checklist items
+        if (taskRequest.getChecklist() != null) {
+            task.getChecklist().clear();
+            List<ChecklistItem> items = taskRequest.getChecklist().stream().map(itemReq -> {
+                ChecklistItem item = new ChecklistItem();
+                item.setContent(itemReq.getContent());
+                item.setChecked(itemReq.isChecked());
+                item.setTask(task);
+                return item;
+            }).collect(Collectors.toList());
+            task.setChecklist(items);
         } else {
-            task.getChecklist().clear(); // Xóa checklist nếu không có checklist mới
+            task.getChecklist().clear();
             task.setChecklist(null);
         }
         Task updatedTask = taskRepository.save(task);
-        return toDto(updatedTask);
+        return toTaskResponse(updatedTask);
     }
 
     @Override

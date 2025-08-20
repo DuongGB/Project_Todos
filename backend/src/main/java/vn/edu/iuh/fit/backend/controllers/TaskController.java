@@ -9,10 +9,15 @@ package vn.edu.iuh.fit.backend.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import vn.edu.iuh.fit.backend.dtos.request.TaskRequest;
 import vn.edu.iuh.fit.backend.dtos.response.BaseResponse;
-import vn.edu.iuh.fit.backend.dtos.response.TaskDto;
+import vn.edu.iuh.fit.backend.dtos.response.TaskResponse;
+import vn.edu.iuh.fit.backend.models.User;
+import vn.edu.iuh.fit.backend.repositories.UserRepository;
 import vn.edu.iuh.fit.backend.services.TaskService;
 
 import java.util.List;
@@ -29,11 +34,12 @@ import java.util.List;
 @CrossOrigin(origins = "*") // Allow all origins for CORS
 public class TaskController {
     private final TaskService taskService;
+    private final UserRepository userRepository;
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<BaseResponse<List<TaskDto>>> getAll() {
-        List<TaskDto> tasks = taskService.getAllTasks();
+    public ResponseEntity<BaseResponse<List<TaskResponse>>> getAll() {
+        List<TaskResponse> tasks = taskService.getAllTasks();
         if (tasks.isEmpty()) {
             return ResponseEntity.ok(
                     new BaseResponse<>("success", "No tasks found", tasks)
@@ -46,8 +52,8 @@ public class TaskController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<BaseResponse<TaskDto>> getById(@PathVariable Long id) {
-        TaskDto task = taskService.getTaskById(id);
+    public ResponseEntity<BaseResponse<TaskResponse>> getById(@PathVariable Long id) {
+        TaskResponse task = taskService.getTaskById(id);
         if (task == null) {
             return ResponseEntity.status(404).body(
                     new BaseResponse<>("error", "Task not found", null)
@@ -60,8 +66,16 @@ public class TaskController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<BaseResponse<TaskDto>> create(@Validated @RequestBody TaskDto dto) {
-        TaskDto saved = taskService.createTask(dto);
+    public ResponseEntity<BaseResponse<TaskResponse>> create(@Validated @RequestBody TaskRequest taskRequest, Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user == null) {
+            return ResponseEntity.status(401).body(
+                    new BaseResponse<>("error", "User not found", null)
+            );
+        }
+        TaskResponse saved = taskService.createTask(taskRequest, user.getId());
         if (saved == null) {
             return ResponseEntity.status(400).body(
                     new BaseResponse<>("error", "Failed to create task", null)
@@ -74,8 +88,8 @@ public class TaskController {
 
     @PostMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<BaseResponse<TaskDto>> update(@PathVariable Long id, @Validated @RequestBody TaskDto dto) {
-        TaskDto updated = taskService.updateTask(id, dto);
+    public ResponseEntity<BaseResponse<TaskResponse>> update(@PathVariable Long id, @Validated @RequestBody TaskRequest taskRequest) {
+        TaskResponse updated = taskService.updateTask(id, taskRequest);
         if (updated == null) {
             return ResponseEntity.status(404).body(
                     new BaseResponse<>("error", "Task not found or update failed", null)
