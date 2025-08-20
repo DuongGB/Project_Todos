@@ -45,7 +45,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/tododb
     username: postgres
-    password: admin
+    password: ${PASSWORD}
 ```
 
 ### Redis Setup
